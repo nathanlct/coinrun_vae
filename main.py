@@ -41,8 +41,8 @@ parser.add_argument('--s3_path', type=str, default='adversarial/coinrun_vae', he
 args = parser.parse_args()
 
 # create save folder
-today = datetime.now().strftime("%d-%m-%Y")
-expname = args.expname.replace(' ', '_') + datetime.now().strftime("_%Hh%M")
+today = datetime.now().strftime('%d-%m-%Y')
+expname = args.expname.replace(' ', '_') + datetime.now().strftime('_%Hh%M')
 save_folder = os.path.join(args.save_folder, today, expname)
 if not os.path.exists(save_folder):
     os.makedirs(save_folder)
@@ -64,7 +64,7 @@ with open(os.path.join(save_folder, 'params.json'), 'w') as f:
     json.dump(args.__dict__, f, indent=4)
 
 # set device
-device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 print(f'Using device {device}')
 
 # set seed for reproducibility (https://pytorch.org/docs/stable/notes/randomness.html)
@@ -178,7 +178,7 @@ for epoch in range(args.epochs):
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict()
-        }, os.path.join(save_folder, f"checkpoints/epoch_{epoch}.checkpoint"))
+        }, os.path.join(save_folder, f'checkpoints/epoch_{epoch}.checkpoint'))
 
         if args.s3:
             for path, subdirs, files in os.walk(save_folder):
