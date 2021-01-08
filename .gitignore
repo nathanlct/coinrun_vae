@@ -1,0 +1,13 @@
+.DS_STORE
+.vscode
+s3/*
+TODO
+.ipynb_checkpoints
+__pycache__
+.build*
+*.pyc
+coinrun.egg-info
+*.moc
+.ipynb*
+vae_results
+notebooks
