@@ -14,7 +14,7 @@ cd coinrun_vae
 python main.py --expname test
 ```
 
-See `main.py` for available command line arguments.
+Run `main.py --help` for more information on available command line arguments.
 
 ## Datasets
 
