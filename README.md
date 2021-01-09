@@ -5,7 +5,7 @@
 ```
 git clone https://github.com/nathanlct/coinrun_vae
 cd coinrun_vae
-./setup.sh
+source setup.sh
 ```
 
 ## Usage
