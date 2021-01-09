@@ -140,7 +140,10 @@ for epoch in range(args.epochs):
         results = model(data)
         train_loss = model.loss(data, *results, epoch, args.epochs)
         for k, v in train_loss.items():
-            train_losses[k].append(v.item())
+            try:
+                train_losses[k].append(v.item())
+            except AttributeError:
+                train_losses[k].append(v)
 
         train_loss['loss'].backward()
         optimizer.step()
@@ -166,7 +169,10 @@ for epoch in range(args.epochs):
                 results = model(data)
                 val_loss = model.loss(data, *results, epoch, args.epochs)
                 for k, v in val_loss.items():
-                    val_losses[k].append(v.item())
+                    try:
+                        val_losses[k].append(v.item())
+                    except AttributeError:
+                        train_losses[k].append(v)
 
             # print validation data
             print()
