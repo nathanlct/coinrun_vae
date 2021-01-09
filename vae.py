@@ -51,7 +51,7 @@ class VAE(nn.Module):
         reconstruction_loss = F.mse_loss(reconstruction, input)
 
         regularisation_loss = - 0.5 * (1 + log_var - torch.exp(log_var) - torch.square(mu))
-        regularisation_loss = torch.mean(torch.sum(regularisation_loss, dim=1))
+        regularisation_loss = torch.mean(regularisation_loss)
 
         loss = reconstruction_loss + regularisation_loss
 
