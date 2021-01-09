@@ -44,20 +44,24 @@ class VAE(nn.Module):
             nn.Tanh()
         )
 
-    def loss(self, input, reconstruction, mu, log_var):
+    def loss(self, input, reconstruction, mu, log_var, epoch, total_epochs):
         """
         Loss = reconstruction loss (MSE) + regularisation loss (KL divergence)
         """
         reconstruction_loss = F.mse_loss(reconstruction, input)
 
         regularisation_loss = - 0.5 * (1 + log_var - torch.exp(log_var) - torch.square(mu))
-        regularisation_loss = torch.mean(regularisation_loss)
+        regularisation_loss = torch.mean(regularisation_loss) / 10
+
+        beta = 0.5 + (30 - 0.5) * epoch / total_epochs
+        regularisation_loss *= beta
 
         loss = reconstruction_loss + regularisation_loss
 
         return {'loss': loss, 
                 'reconstruction_loss': reconstruction_loss,
-                'regularisation_loss': regularisation_loss}
+                'regularisation_loss': regularisation_loss,
+                'beta': beta}
 
     def encode(self, input):
         """
