@@ -40,10 +40,10 @@ parser.add_argument('--latent_dim', type=int, default=32,
 
 parser.add_argument('--epochs', type=int, default=5,
     help='Number of training epochs')
-parser.add_argument('--validate_every', type=int, default=2,
-    help='Run a validation step every n epochs')
-parser.add_argument('--checkpoint_every', type=int, default=2,
-    help='Create a checkpoint every n epochs')
+parser.add_argument('--validate_every', type=int, default=-1,
+    help='Run a validation step every n epochs. Set to -1 to validate at the end only')
+parser.add_argument('--checkpoint_every', type=int, default=-1,
+    help='Create a checkpoint every n epochs. Set to -1 for a checkpoint at the end only')
 parser.add_argument('--save_folder', type=str, default='vae_results',
     help='Local folders where experiment data and checkpoints are saved')
 
@@ -154,7 +154,7 @@ for epoch in range(args.epochs):
     print(', '.join(train_loss_data))
 
     # validate every args.validate_every epochs and at the last epoch
-    if epoch % args.validate_every == 0 or epoch == args.epochs - 1:
+    if (args.validate_every > 0 and epoch % args.validate_every == 0) or epoch == args.epochs - 1:
         print(f'> validating over {n_val_batches} batches')
         with torch.no_grad():
             model.eval()
@@ -188,7 +188,7 @@ for epoch in range(args.epochs):
             writer.add_image('samples', grid2, epoch)    
             del test_input, recons, samples
 
-    if epoch % args.checkpoint_every == 0 or epoch == args.epochs - 1:
+    if (args.checkpoint_every > 0 and epoch % args.checkpoint_every == 0) or epoch == args.epochs - 1:
         print('> saving checkpoint')
         torch.save({
             'epoch': epoch,
