@@ -54,13 +54,13 @@ class VAE(nn.Module):
         regularisation_loss = torch.mean(regularisation_loss) / 10
 
         beta = 0.5 + (30 - 0.5) * epoch / total_epochs
-        regularisation_loss *= beta
 
-        loss = reconstruction_loss + regularisation_loss
+        loss = reconstruction_loss + beta * regularisation_loss
 
         return {'loss': loss, 
                 'reconstruction_loss': reconstruction_loss,
                 'regularisation_loss': regularisation_loss,
+                'regularisation_loss_beta': beta * regularisation_loss,
                 'beta': beta}
 
     def encode(self, input):
