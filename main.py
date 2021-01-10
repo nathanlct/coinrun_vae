@@ -28,7 +28,7 @@ parser.add_argument('--description', type=str, default='',
     help='Additional description for the experiment')
 parser.add_argument('--local', action='store_true', default=False,
     help='Set this to true when running locally without GPU')
-parser.add_argument('--seed', type=int, default=1234,
+parser.add_argument('--seed', type=int, default=None,
     help='Seed for deterministic training')
 
 parser.add_argument('--lr', type=float, default=3e-4,
