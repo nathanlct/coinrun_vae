@@ -30,7 +30,7 @@ def main():
 
     env = utils.make_general_env(nenvs, seed=rank)
 
-    with tf.Session(config=config):
+    with tf.compat.v1.Session(config=config):
         env = wrappers.add_final_wrappers(env)
         
         policy = policies.get_policy()

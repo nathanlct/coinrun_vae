@@ -25,7 +25,7 @@ def impala_cnn(images, depths=[16, 32, 32]):
 
             var_name = 'mask_' + str(dropout_layer_num[0])
             batch_seed_shape = out_shape[1:]
-            batch_seed = tf.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
+            batch_seed = tf.compat.v1.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
             batch_seed_assign = tf.assign(batch_seed, tf.random_uniform(batch_seed_shape, minval=0, maxval=1))
             dropout_assign_ops.append(batch_seed_assign)
 
@@ -49,7 +49,7 @@ def impala_cnn(images, depths=[16, 32, 32]):
         return out
 
     def residual_block(inputs):
-        depth = inputs.get_shape()[-1].value
+        depth = inputs.get_shape()[-1]
         
         out = tf.nn.relu(inputs)
 
@@ -102,7 +102,7 @@ def soft_att_impala_cnn(images, depths=[16, 32, 32]):
 
             var_name = 'mask_' + str(dropout_layer_num[0])
             batch_seed_shape = out_shape[1:]
-            batch_seed = tf.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
+            batch_seed = tf.compat.v1.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
             batch_seed_assign = tf.assign(batch_seed, tf.random_uniform(batch_seed_shape, minval=0, maxval=1))
             dropout_assign_ops.append(batch_seed_assign)
 
@@ -126,7 +126,7 @@ def soft_att_impala_cnn(images, depths=[16, 32, 32]):
         return out
 
     def residual_block(inputs):
-        depth = inputs.get_shape()[-1].value
+        depth = inputs.get_shape()[-1]
         
         out = tf.nn.relu(inputs)
 
@@ -184,7 +184,7 @@ def random_impala_cnn(images, depths=[16, 32, 32]):
 
             var_name = 'mask_' + str(dropout_layer_num[0])
             batch_seed_shape = out_shape[1:]
-            batch_seed = tf.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
+            batch_seed = tf.compat.v1.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
             batch_seed_assign = tf.assign(batch_seed, tf.random_uniform(batch_seed_shape, minval=0, maxval=1))
             dropout_assign_ops.append(batch_seed_assign)
 
@@ -208,7 +208,7 @@ def random_impala_cnn(images, depths=[16, 32, 32]):
         return out
 
     def residual_block(inputs):
-        depth = inputs.get_shape()[-1].value
+        depth = inputs.get_shape()[-1]
         
         out = tf.nn.relu(inputs)
 
@@ -278,7 +278,7 @@ def random_impala_cnn_mc(mc_flag, MC_tot, images, depths=[16, 32, 32]):
 
             var_name = 'mask_' + str(dropout_layer_num[0])
             batch_seed_shape = out_shape[1:]
-            batch_seed = tf.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
+            batch_seed = tf.compat.v1.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
             batch_seed_assign = tf.assign(batch_seed, tf.random_uniform(batch_seed_shape, minval=0, maxval=1))
             dropout_assign_ops.append(batch_seed_assign)
 
@@ -302,7 +302,7 @@ def random_impala_cnn_mc(mc_flag, MC_tot, images, depths=[16, 32, 32]):
         return out
 
     def residual_block(inputs):
-        depth = inputs.get_shape()[-1].value
+        depth = inputs.get_shape()[-1]
         
         out = tf.nn.relu(inputs)
 
@@ -369,7 +369,7 @@ def random_att_impala_cnn(images, clean_flag=0, depths=[16, 32, 32]):
 
             var_name = 'mask_' + str(dropout_layer_num[0])
             batch_seed_shape = out_shape[1:]
-            batch_seed = tf.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
+            batch_seed = tf.compat.v1.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
             batch_seed_assign = tf.assign(batch_seed, tf.random_uniform(batch_seed_shape, minval=0, maxval=1))
             dropout_assign_ops.append(batch_seed_assign)
 
@@ -393,7 +393,7 @@ def random_att_impala_cnn(images, clean_flag=0, depths=[16, 32, 32]):
         return out
 
     def residual_block(inputs):
-        depth = inputs.get_shape()[-1].value
+        depth = inputs.get_shape()[-1]
         
         out = tf.nn.relu(inputs)
 
@@ -482,7 +482,7 @@ def random_soft_att_impala_cnn(images, clean_flag=0, depths=[16, 32, 32]):
 
             var_name = 'mask_' + str(dropout_layer_num[0])
             batch_seed_shape = out_shape[1:]
-            batch_seed = tf.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
+            batch_seed = tf.compat.v1.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
             batch_seed_assign = tf.assign(batch_seed, tf.random_uniform(batch_seed_shape, minval=0, maxval=1))
             dropout_assign_ops.append(batch_seed_assign)
 
@@ -506,7 +506,7 @@ def random_soft_att_impala_cnn(images, clean_flag=0, depths=[16, 32, 32]):
         return out
 
     def residual_block(inputs):
-        depth = inputs.get_shape()[-1].value
+        depth = inputs.get_shape()[-1]
         
         out = tf.nn.relu(inputs)
 
@@ -600,7 +600,7 @@ def random_meta_impala_cnn(images, rand_params, depths=[16, 32, 32]):
 
             var_name = 'mask_' + str(dropout_layer_num[0])
             batch_seed_shape = out_shape[1:]
-            batch_seed = tf.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
+            batch_seed = tf.compat.v1.get_variable(var_name, shape=batch_seed_shape, initializer=tf.random_uniform_initializer(minval=0, maxval=1), trainable=False)
             batch_seed_assign = tf.assign(batch_seed, tf.random_uniform(batch_seed_shape, minval=0, maxval=1))
             dropout_assign_ops.append(batch_seed_assign)
 
@@ -624,7 +624,7 @@ def random_meta_impala_cnn(images, rand_params, depths=[16, 32, 32]):
         return out
 
     def residual_block(inputs):
-        depth = inputs.get_shape()[-1].value
+        depth = inputs.get_shape()[-1]
         
         out = tf.nn.relu(inputs)
 
@@ -713,7 +713,7 @@ class LstmPolicy(object):
 
         M = tf.placeholder(tf.float32, [nbatch]) #mask (done t-1)
         S = tf.placeholder(tf.float32, [nenv, nlstm*2]) #states
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             h, _, _, self.dropout_assign_ops = choose_cnn(processed_x)
             xs = batch_to_seq(h, nenv, nsteps)
             ms = batch_to_seq(M, nenv, nsteps)
@@ -744,7 +744,7 @@ class CnnPolicy(object):
         self.pdtype = make_pdtype(ac_space)
         X, processed_x = observation_input(ob_space, nbatch)
 
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             h, inter_features, attention_map, self.dropout_assign_ops = choose_cnn(processed_x)
             vf = fc(h, 'v', 1)[:,0]
             self.pd, self.pi = self.pdtype.pdfromlatent(h, init_scale=0.01)
@@ -785,7 +785,7 @@ class SoftATTCnnPolicy(object):
         X, processed_x = observation_input(ob_space, nbatch)
         scaled_images = tf.cast(processed_x, tf.float32) / 255.
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             h, attention_map, self.dropout_assign_ops = soft_att_impala_cnn(scaled_images)    
             vf = fc(h, 'v', 1)[:,0]
             self.pd, self.pi = self.pdtype.pdfromlatent(h, init_scale=0.01)
@@ -823,12 +823,12 @@ class CnnResetPolicy(object):
         self.pdtype = make_pdtype(ac_space)
         X, processed_x = observation_input(ob_space, nbatch)
 
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             h, _, _, self.dropout_assign_ops = choose_cnn(processed_x)
             vf = fc(h, 'v', 1)[:,0]
             self.pd, self.pi = self.pdtype.pdfromlatent(h, init_scale=0.01)
 
-        with tf.variable_scope("target_model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("target_model", reuse=tf.compat.v1.AUTO_REUSE):
             target_h, _, _, _ = choose_cnn(processed_x)
             target_vf = fc(target_h, 'v', 1)[:,0]
             self.target_pd, self.target_pi = self.pdtype.pdfromlatent(target_h, init_scale=0.01)
@@ -868,7 +868,7 @@ class CnnDQN(object):
         self.pdtype = make_pdtype(ac_space)
         X, processed_x = observation_input(ob_space, nbatch)
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             h, _, _, self.dropout_assign_ops = choose_cnn(processed_x)
             q_value = fc(h, 'dqn', ac_space.n)
             #q_value = tf.nn.relu(q_value)
@@ -876,7 +876,7 @@ class CnnDQN(object):
         a0 = tf.argmax(q_value, axis=1)
         max_q_value = tf.reduce_max(q_value, axis=1)
         
-        with tf.variable_scope("target_model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("target_model", reuse=tf.compat.v1.AUTO_REUSE):
             target_h, _, _, _ = choose_cnn(processed_x)
             target_q_value = fc(target_h, 'dqn', ac_space.n)
             #target_q_value = tf.nn.relu(target_q_value)
@@ -906,18 +906,18 @@ class RandomCnnPolicy(object):
         scaled_images = tf.cast(processed_x, tf.float32) / 255.
         mc_index = tf.placeholder(tf.int64, shape=[1], name='mc_index')
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             h, attention_map, self.dropout_assign_ops = random_impala_cnn(scaled_images)    
             vf = fc(h, 'v', 1)[:,0]
             self.pd, self.pi = self.pdtype.pdfromlatent(h, init_scale=0.01)
             
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             clean_h, _, _, _ = impala_cnn(scaled_images)
             clean_vf = fc(clean_h, 'v', 1)[:,0]
             self.clean_pd, self.clean_pi = self.pdtype.pdfromlatent(clean_h, init_scale=0.01)
         
         # for MC test
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             mc_h, _ = random_impala_cnn_mc(mc_index, Config.MC_ITER, scaled_images)
             mc_vf = fc(mc_h, 'v', 1)[:,0]
             self.mc_pd, self.mc_pi = self.pdtype.pdfromlatent(mc_h, init_scale=0.01)
@@ -982,12 +982,12 @@ class RandomATTCnnPolicy(object):
         scaled_images = tf.cast(processed_x, tf.float32) / 255.
         mc_index = tf.placeholder(tf.int64, shape=[1], name='mc_index')
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             h, attention_map, self.dropout_assign_ops = random_att_impala_cnn(scaled_images)    
             vf = fc(h, 'v', 1)[:,0]
             self.pd, self.pi = self.pdtype.pdfromlatent(h, init_scale=0.01)
             
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             clean_h, _, _ = random_att_impala_cnn(scaled_images, clean_flag=1)
             clean_vf = fc(clean_h, 'v', 1)[:,0]
             self.clean_pd, self.clean_pi = self.pdtype.pdfromlatent(clean_h, init_scale=0.01)
@@ -1042,12 +1042,12 @@ class RandomSoftATTCnnPolicy(object):
         scaled_images = tf.cast(processed_x, tf.float32) / 255.
         mc_index = tf.placeholder(tf.int64, shape=[1], name='mc_index')
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             h, attention_map, self.dropout_assign_ops = random_soft_att_impala_cnn(scaled_images)    
             vf = fc(h, 'v', 1)[:,0]
             self.pd, self.pi = self.pdtype.pdfromlatent(h, init_scale=0.01)
             
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             clean_h, _, _ = random_soft_att_impala_cnn(scaled_images, clean_flag=1)
             clean_vf = fc(clean_h, 'v', 1)[:,0]
             self.clean_pd, self.clean_pi = self.pdtype.pdfromlatent(clean_h, init_scale=0.01)
@@ -1122,7 +1122,7 @@ class RandomMetaCnnPolicy(object):
         fixed_random_params = tf.placeholder(tf.float32, [3, 3, 3, 3])
         
         # meta-learner outputs
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             meta_pre_h, _, _ = random_impala_cnn(meta_pre_scaled_images)
             meta_pre_h = tf.stop_gradient(meta_pre_h)
             meta_act_em = tf.nn.relu(fc(meta_pre_one_hot, 'meta_lstm1_act', 16))
@@ -1135,13 +1135,13 @@ class RandomMetaCnnPolicy(object):
             meta_out = fc(meta_h_out, 'meta_lstm1_fc', 81)
             meta_out = tf.reshape(meta_out[-1], shape=(3, 3, 3, 3))
     
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             meta_h, _ = random_meta_impala_cnn(meta_post_scaled_images, fixed_random_params + meta_out)
             meta_vf = fc(meta_h, 'v', 1)[:,0]
             self.meta_pd, self.meta_pi = self.pdtype.pdfromlatent(meta_h, init_scale=0.01)
 
         # inference
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             meta_pre_infer_h, _ = random_meta_impala_cnn(meta_pre_scaled_images, fixed_random_params)
             meta_pre_act_em = tf.nn.relu(fc(meta_pre_one_hot, 'meta_lstm1_act', 16))
             xs_pre_infer = batch_to_seq(tf.concat([meta_pre_infer_h, meta_pre_act_em], 1), meta_batch, Config.META_WINDOW)
@@ -1151,7 +1151,7 @@ class RandomMetaCnnPolicy(object):
             meta_pre_out = fc(meta_pre_h_out, 'meta_lstm1_fc', 81)
             meta_pre_out = tf.reshape(meta_pre_out[-1], shape=(3, 3, 3, 3))
             
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             meta_post_infer_h, _ = random_meta_impala_cnn(meta_post_infer_scaled_images, \
                                                                   fixed_random_params + meta_pre_out)
             self.meta_post_infer_pd, self.meta_post_infer_pi = self.pdtype.pdfromlatent(meta_post_infer_h, init_scale=0.01)
@@ -1159,7 +1159,7 @@ class RandomMetaCnnPolicy(object):
         meta_post_infer_a0 = self.meta_post_infer_pd.sample()
         meta_softout = tf.nn.softmax(self.meta_post_infer_pi)
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             post_infer_h, _ = random_meta_impala_cnn(meta_post_infer_scaled_images, fixed_random_params)
             self.post_infer_pd, self.post_infer_pi = self.pdtype.pdfromlatent(post_infer_h, init_scale=0.01)
         
@@ -1170,12 +1170,12 @@ class RandomMetaCnnPolicy(object):
         X, processed_x = observation_input(ob_space, nbatch)
         scaled_images = tf.cast(processed_x, tf.float32) / 255.
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             h, _, self.dropout_assign_ops = random_impala_cnn(scaled_images)    
             vf = fc(h, 'v', 1)[:,0]
             self.pd, self.pi = self.pdtype.pdfromlatent(h, init_scale=0.01)
             
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             clean_h, _, _, _ = impala_cnn(scaled_images)
             clean_vf = fc(clean_h, 'v', 1)[:,0]
             self.clean_pd, self.clean_pi = self.pdtype.pdfromlatent(clean_h, init_scale=0.01)
@@ -1270,7 +1270,7 @@ class RandomPolicyMetaCnnPolicy(object):
         fixed_bias = tf.placeholder(tf.float32, [7])
         
         # meta-learner outputs
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             meta_pre_h, _, _ = random_impala_cnn(meta_pre_scaled_images)
             meta_pre_h = tf.stop_gradient(meta_pre_h)
             meta_act_em = tf.nn.relu(fc(meta_pre_one_hot, 'meta_lstm1_act', 16))
@@ -1285,13 +1285,13 @@ class RandomPolicyMetaCnnPolicy(object):
             meta_out_kernel = tf.reshape(meta_out_kernel[-1], shape=(256, 7))
             meta_out_bias = tf.reshape(meta_out_bias[-1], shape=(7,))
 
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             meta_h, _, _ = random_impala_cnn(meta_post_scaled_images)
             meta_vf = fc(meta_h, 'v', 1)[:,0]
             self.meta_pd, self.meta_pi = self.pdtype.pdfromlatent_external(meta_h, meta_out_kernel, meta_out_bias)
             
         # inference
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             meta_pre_infer_h, _, _ = random_impala_cnn(meta_pre_scaled_images)
             meta_pre_act_em = tf.nn.relu(fc(meta_pre_one_hot, 'meta_lstm1_act', 16))
             xs_pre_infer = batch_to_seq(tf.concat([meta_pre_infer_h, meta_pre_act_em], 1), meta_batch, Config.META_WINDOW)
@@ -1303,7 +1303,7 @@ class RandomPolicyMetaCnnPolicy(object):
             meta_pre_out_kernel = tf.reshape(meta_pre_out_kernel[-1], shape=(256, 7))
             meta_pre_out_bias = tf.reshape(meta_pre_out_bias[-1], shape=(7,))
             
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             meta_post_infer_h, _, _ = random_impala_cnn(meta_post_infer_scaled_images)
             self.meta_post_infer_pd, self.meta_post_infer_pi \
             = self.pdtype.pdfromlatent_external(meta_post_infer_h, meta_pre_out_kernel, meta_pre_out_bias)
@@ -1311,7 +1311,7 @@ class RandomPolicyMetaCnnPolicy(object):
         meta_post_infer_a0 = self.meta_post_infer_pd.sample()
         meta_softout = tf.nn.softmax(self.meta_post_infer_pi)
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             post_infer_h, _, _ = random_impala_cnn(meta_post_infer_scaled_images)
             self.post_infer_pd, self.post_infer_pi = self.pdtype.pdfromlatent(post_infer_h)
         post_infer_a0 = self.post_infer_pd.sample()
@@ -1321,12 +1321,12 @@ class RandomPolicyMetaCnnPolicy(object):
         X, processed_x = observation_input(ob_space, nbatch)
         scaled_images = tf.cast(processed_x, tf.float32) / 255.
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):    
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):    
             h, _, self.dropout_assign_ops = random_impala_cnn(scaled_images)    
             vf = fc(h, 'v', 1)[:,0]
             self.pd, self.pi = self.pdtype.pdfromlatent(h)
             
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             clean_h, _, _, _ = impala_cnn(scaled_images)
             clean_vf = fc(clean_h, 'v', 1)[:,0]
             self.clean_pd, self.clean_pi = self.pdtype.pdfromlatent(clean_h)
@@ -1402,7 +1402,7 @@ class VAEPolicy(object):
         ob_shape = (nbatch, z_size)
         X = tf.placeholder(tf.float32, ob_shape, name="Ob")
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             activ = tf.nn.relu
             h1 = activ(fc(X, "shared_fc1", nh=1024, init_scale=np.sqrt(2)))
             h2 = activ(fc(h1, "shared_fc2", nh=1024, init_scale=np.sqrt(2)))
@@ -1443,7 +1443,7 @@ class VAELstmPolicy(object):
 
         M = tf.placeholder(tf.float32, [nbatch]) #mask (done t-1)
         S = tf.placeholder(tf.float32, [nenv, nlstm*2]) #states
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             xs = batch_to_seq(X, nenv, nsteps)
             ms = batch_to_seq(M, nenv, nsteps)
             h5, snew = lstm(xs, ms, S, 'lstm1', nh=nlstm)
@@ -1485,7 +1485,7 @@ class VAEATTPolicy(object):
         ob_shape = (nbatch, z_size)
         X = tf.placeholder(tf.float32, ob_shape, name="Ob")
         
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("model", reuse=tf.compat.v1.AUTO_REUSE):
             activ = tf.nn.relu
             h1 = activ(fc(X, "shared_fc1", nh=512, init_scale=np.sqrt(2)))
             

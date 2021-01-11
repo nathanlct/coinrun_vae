@@ -54,7 +54,7 @@ def enjoy_env_sess(sess, DIR_NAME):
     num_actions = env.action_space.n
     
     init_rand = tf.variables_initializer([v for v in tf.global_variables() if 'randcnn' in v.name])
-    sess.run(tf.global_variables_initializer())
+    sess.run(tf.compat.v1.global_variables_initializer())
     
     soft_numpy = tf.placeholder(tf.float32, [nenvs, num_actions], name='soft_numpy')
     dist = tfp.distributions.Categorical(probs=soft_numpy)
@@ -167,7 +167,7 @@ def main():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     
-    with tf.Session(config=config) as sess:
+    with tf.compat.v1.Session(config=config) as sess:
         results = enjoy_env_sess(sess, DIR_NAME)
         print(results)
 

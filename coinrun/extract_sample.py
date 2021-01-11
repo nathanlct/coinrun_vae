@@ -13,6 +13,9 @@ from mpi4py import MPI
 from coinrun import setup_utils, policies, wrappers, ppo2
 from coinrun.config import Config
 
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 def create_act_model(sess, env, nenvs):
     ob_space = env.observation_space
     ac_space = env.action_space
@@ -38,7 +41,7 @@ def main(sess):
 
     utils.setup_mpi_gpus()
 
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True # pylint: disable=E1101
 
     use_policy = (Config.RESTORE_ID != '')
@@ -49,7 +52,7 @@ def main(sess):
 
     if use_policy:
         agent = create_act_model(sess, env, nenvs)
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.compat.v1.global_variables_initializer())
         loaded_params = utils.load_params_for_scope(sess, 'model')
         if not loaded_params:
             print('NO SAVED PARAMS LOADED')
@@ -62,7 +65,7 @@ def main(sess):
     # set file name
     filename = DIR_NAME+"/"+Config.get_save_file()+"_"+str(seed * 100 + rank)+".npz"
     
-    with tf.Session(config=config):
+    with tf.compat.v1.Session(config=config):
         env = wrappers.add_final_wrappers(env)
         nenv = nenv = env.num_envs if hasattr(env, 'num_envs') else 1
         obs = np.zeros((nenv,) + env.observation_space.shape, dtype=env.observation_space.dtype.name)
@@ -108,5 +111,5 @@ def main(sess):
 if __name__ == '__main__':
     utils.setup_mpi_gpus()
     setup_utils.setup_and_load()
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         main(sess)

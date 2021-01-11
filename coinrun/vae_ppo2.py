@@ -87,7 +87,7 @@ class Model(object):
         pg_losses2 = -ADV * tf.clip_by_value(ratio, 1.0 - CLIPRANGE, 1.0 + CLIPRANGE)
         pg_loss = tf.reduce_mean(tf.maximum(pg_losses, pg_losses2))
         approxkl = .5 * tf.reduce_mean(tf.square(neglogpac - OLDNEGLOGPAC))
-        clipfrac = tf.reduce_mean(tf.to_float(tf.greater(tf.abs(ratio - 1.0), CLIPRANGE)))
+        clipfrac = tf.reduce_mean(tf.cast(tf.greater(tf.abs(ratio - 1.0), CLIPRANGE), dtype=tf.float32))
 
         params = tf.trainable_variables()
         weight_params = [v for v in params if '/b' not in v.name]
