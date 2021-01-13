@@ -11,4 +11,3 @@ coinrun.egg-info
 .ipynb*
 vae_results
 notebooks
-utils.py
