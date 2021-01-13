@@ -51,6 +51,12 @@ def _arg_parser():
         help='Whether to send a Pushover notification when training ends or if it errors '
              '(requires to have APP_TOKEN and USER_TOKEN setup in utils.py)')
 
+    parser.add_argument('--beta_min', type=float, default=1.0,
+        help='Initial beta the KLD loss will be multiplied by')
+    parser.add_argument('--beta_max', type=float, default=1.0,
+        help='Final beta the KLD loss will be multiplied by '
+             '(beta will increase linearly from beta_min to beta_max over the training)')
+
     return parser
 
 

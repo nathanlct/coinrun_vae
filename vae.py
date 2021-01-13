@@ -4,13 +4,20 @@ from torch.nn import functional as F
 
 
 class VAE(nn.Module):
-    def __init__(self, latent_dim=32):
+    def __init__(self, args):
         super().__init__()
+
+        # training
+        self.args = args
+        self.epoch = 0
+        self.epochs = self.args.epochs
+        self.beta0 = self.args.beta_min
+        self.beta1 = self.args.beta_max
 
         # dimensions
         self.input_dim = 3  # RGB 
         self.hidden_dims = [32, 64, 128, 256, 512]
-        self.latent_dim = latent_dim
+        self.latent_dim = self.args.latent_dim
         self.dims = [self.input_dim] + self.hidden_dims + [self.latent_dim]
 
         # encoder
@@ -44,16 +51,16 @@ class VAE(nn.Module):
             nn.Tanh()
         )
 
-    def loss(self, input, reconstruction, mu, log_var, epoch, total_epochs):
+    def loss(self, input, reconstruction, mu, log_var):
         """
         Loss = reconstruction loss (MSE) + regularisation loss (KL divergence)
         """
         reconstruction_loss = F.mse_loss(reconstruction, input)
 
-        regularisation_loss = - 0.5 * (1 + log_var - torch.exp(log_var) - torch.square(mu))
-        regularisation_loss = torch.mean(regularisation_loss) / 10
+        regularisation_loss = - 0.5 * torch.sum(1 + log_var - torch.exp(log_var) - torch.square(mu), 1)
+        regularisation_loss = torch.mean(regularisation_loss)
 
-        beta = 0.5 + (30 - 0.5) * epoch / total_epochs
+        beta = self.beta0 + (self.beta1 - self.beta0) * self.epoch / self.epochs
 
         loss = reconstruction_loss + beta * regularisation_loss
 

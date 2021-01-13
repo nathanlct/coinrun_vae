@@ -80,7 +80,7 @@ print(f'{TINFO}Initialized training dataset with {n_train} samples, {n_train_bat
 print(f'{TINFO}Initialized validation dataset with {n_val} samples, {n_val_batches} batches')
 
 # model
-model = VAE(latent_dim=args.latent_dim).to(device)
+model = VAE(args).to(device)
 
 # optimizer
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -97,6 +97,7 @@ try:
     for epoch in tqdm(range(args.epochs), desc=TINFO+BOLD('EPOCH'), colour='green'):
         # train for one epoch
         model.train()
+        model.epoch = epoch
         train_losses = defaultdict(list)
 
         for batch_idx, batch in enumerate(tqdm(train_dataloader, desc=TINFO+'(train) '+BOLD('BATCH'), colour='cyan', leave=False)):
@@ -104,7 +105,7 @@ try:
             optimizer.zero_grad()
 
             results = model(data)
-            train_loss = model.loss(data, *results, epoch, args.epochs)
+            train_loss = model.loss(data, *results)
             for k, v in train_loss.items():
                 try:
                     train_losses[k].append(v.item())
@@ -124,7 +125,7 @@ try:
 
                     data = batch.to(device)
                     results = model(data)
-                    val_loss = model.loss(data, *results, epoch, args.epochs)
+                    val_loss = model.loss(data, *results)
                     for k, v in val_loss.items():
                         try:
                             val_losses[k].append(v.item())
