@@ -31,9 +31,9 @@ def _arg_parser():
     parser.add_argument('--latent_dim', type=int, default=32,
         help='Dimension of the VAE latent space (bottleneck)')
 
-    parser.add_argument('--epochs', type=int, default=5,
+    parser.add_argument('--epochs', type=int, default=200,
         help='Number of training epochs')
-    parser.add_argument('--validate_every', type=int, default=-1,
+    parser.add_argument('--validate_every', type=int, default=10,
         help='Run a validation step every n epochs. Set to -1 to validate at the end only')
     parser.add_argument('--checkpoint_every', type=int, default=-1,
         help='Create a checkpoint every n epochs. Set to -1 for a checkpoint at the end only')
