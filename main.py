@@ -3,9 +3,11 @@ import numpy as np
 import boto3
 import os
 import os.path
+import sys
 from datetime import datetime
 import json
 from tqdm import tqdm
+from termcolor import colored as c
 
 import torch
 import torchvision.utils
@@ -16,7 +18,7 @@ from torchvision import transforms
 from dataset import CoinrunDataset
 from vae import VAE
 from parser import *
-from termcolor import colored as c
+import utils
 
 print(TLINE)
 print(TINFO + c('INITIALIZATION', 'green', attrs=['bold']))
@@ -91,88 +93,97 @@ print(TLINE)
 print(TINFO + c('STARTING EXPERIMENT', 'green', attrs=['bold']))
 print(TLINE)
 
-for epoch in tqdm(range(args.epochs), desc=TINFO+BOLD('EPOCH'), colour='green'):
-    # train for one epoch
-    model.train()
-    train_losses = defaultdict(list)
+try:
+    for epoch in tqdm(range(args.epochs), desc=TINFO+BOLD('EPOCH'), colour='green'):
+        # train for one epoch
+        model.train()
+        train_losses = defaultdict(list)
 
-    for batch_idx, batch in enumerate(tqdm(train_dataloader, desc=TINFO+'(train) '+BOLD('BATCH'), colour='cyan', leave=False)):
-        data = batch.to(device)
-        optimizer.zero_grad()
+        for batch_idx, batch in enumerate(tqdm(train_dataloader, desc=TINFO+'(train) '+BOLD('BATCH'), colour='cyan', leave=False)):
+            data = batch.to(device)
+            optimizer.zero_grad()
 
-        results = model(data)
-        train_loss = model.loss(data, *results, epoch, args.epochs)
-        for k, v in train_loss.items():
-            try:
-                train_losses[k].append(v.item())
-            except AttributeError:
-                train_losses[k].append(v)
+            results = model(data)
+            train_loss = model.loss(data, *results, epoch, args.epochs)
+            for k, v in train_loss.items():
+                try:
+                    train_losses[k].append(v.item())
+                except AttributeError:
+                    train_losses[k].append(v)
 
-        train_loss['loss'].backward()
-        optimizer.step()
+            train_loss['loss'].backward()
+            optimizer.step()
 
-    # validate every args.validate_every epochs and at the last epoch
-    do_validation = (args.validate_every > 0 and epoch % args.validate_every == 0) or epoch == args.epochs - 1
-    if do_validation:
-        with torch.no_grad():
-            model.eval()
-            val_losses = defaultdict(list)
-            for batch_idx, batch in enumerate(tqdm(val_dataloader, desc=TINFO+'(val) '+BOLD('BATCH'), colour='blue', leave=False)):
+        # validate every args.validate_every epochs and at the last epoch
+        do_validation = (args.validate_every > 0 and epoch % args.validate_every == 0) or epoch == args.epochs - 1
+        if do_validation:
+            with torch.no_grad():
+                model.eval()
+                val_losses = defaultdict(list)
+                for batch_idx, batch in enumerate(tqdm(val_dataloader, desc=TINFO+'(val) '+BOLD('BATCH'), colour='blue', leave=False)):
 
-                data = batch.to(device)
-                results = model(data)
-                val_loss = model.loss(data, *results, epoch, args.epochs)
-                for k, v in val_loss.items():
-                    try:
-                        val_losses[k].append(v.item())
-                    except AttributeError:
-                        val_losses[k].append(v)
+                    data = batch.to(device)
+                    results = model(data)
+                    val_loss = model.loss(data, *results, epoch, args.epochs)
+                    for k, v in val_loss.items():
+                        try:
+                            val_losses[k].append(v.item())
+                        except AttributeError:
+                            val_losses[k].append(v)
 
-            # upload to tensorboard some validation dataset reconstructions 
-            # and reconstruction from random samples in the latent space
-            test_input = next(iter(val_dataloader)).to(device)
-            recons = model.generate(test_input)
-            grid1 = torchvision.utils.make_grid(recons.data, normalize=True, nrow=8)
-            samples = model.sample(args.batch_size, device)
-            grid2 = torchvision.utils.make_grid(samples.cpu().data, normalize=True, nrow=8)
-            writer.add_image('reconstructions', grid1, epoch)
-            writer.add_image('samples', grid2, epoch)    
-            del test_input, recons, samples
+                # upload to tensorboard some validation dataset reconstructions 
+                # and reconstruction from random samples in the latent space
+                test_input = next(iter(val_dataloader)).to(device)
+                recons = model.generate(test_input)
+                grid1 = torchvision.utils.make_grid(recons.data, normalize=True, nrow=8)
+                samples = model.sample(args.batch_size, device)
+                grid2 = torchvision.utils.make_grid(samples.cpu().data, normalize=True, nrow=8)
+                writer.add_image('reconstructions', grid1, epoch)
+                writer.add_image('samples', grid2, epoch)    
+                del test_input, recons, samples
 
-    def print_data(losses, label):
-        len_max_key = max([len(k) for k in losses.keys()])
-        print(TLOG + BOLD(label))
-        for k, v in losses.items():
-            s = TLOG + '    ' + k + ' ' * (len_max_key - len(k) + 1)
-            s += f'{np.mean(v):.3f} +- {np.std(v):.3f}'
-            print(s)
+        def print_data(losses, label):
+            len_max_key = max([len(k) for k in losses.keys()])
+            print(TLOG + BOLD(label))
+            for k, v in losses.items():
+                s = TLOG + '    ' + k + ' ' * (len_max_key - len(k) + 1)
+                s += f'{np.mean(v):.3f} +- {np.std(v):.3f}'
+                print(s)
 
-    print()
-    print_data(train_losses, 'Training')
-    if do_validation:
-        print_data(val_losses, 'Validation')
+        print()
+        print_data(train_losses, 'Training')
+        if do_validation:
+            print_data(val_losses, 'Validation')
 
-    if (args.checkpoint_every > 0 and epoch % args.checkpoint_every == 0) or epoch == args.epochs - 1:
-        cp_name = f'checkpoints/epoch_{epoch}.checkpoint'
-        cp_path = os.path.join(save_folder, cp_name)
-        torch.save({
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict()
-        }, cp_path)
+        if (args.checkpoint_every > 0 and epoch % args.checkpoint_every == 0) or epoch == args.epochs - 1:
+            cp_name = f'checkpoints/epoch_{epoch}.checkpoint'
+            cp_path = os.path.join(save_folder, cp_name)
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict()
+            }, cp_path)
 
-        print(f'{TLOG}Saved checkpoint at {BOLD(cp_path)}')
+            print(f'{TLOG}Saved checkpoint at {BOLD(cp_path)}')
 
-        if args.s3:
-            for path, subdirs, files in os.walk(save_folder):
-                directory_name = path.replace(args.save_folder + '/', '')
-                for file in files:
-                    bucket.upload_file(os.path.join(path, file), os.path.join(args.s3_path, directory_name, file))
-            s3_path = f's3://{args.s3_bucket}/{args.s3_path}/{today}/{expname}'
-            print(f'{TLOG}Uploaded experiment data to {BOLD(s3_path)}')
-
-writer.close()
+            if args.s3:
+                for path, subdirs, files in os.walk(save_folder):
+                    directory_name = path.replace(args.save_folder + '/', '')
+                    for file in files:
+                        bucket.upload_file(os.path.join(path, file), os.path.join(args.s3_path, directory_name, file))
+                s3_path = f's3://{args.s3_bucket}/{args.s3_path}/{today}/{expname}'
+                print(f'{TLOG}Uploaded experiment data to {BOLD(s3_path)}')
+    writer.close()
+except Exception as e:
+    print('\n\n')
+    s_err = f'Training errored at epoch {epoch+1}/{args.epochs} with error: {e}'
+    print(f'{TERR}{s_err}')
+    if args.notify:
+        utils.notify(message=s_err, title=args.expname)
+    exit(0)
 
 print(TLINE)
 print(TINFO + c('EXPERIMENT SUCCESS', 'green', attrs=['bold']))
 print(TLINE)
+if args.notify:
+    utils.notify(message=f'Training ended succesfully after {args.epochs} epochs', title=args.expname)

@@ -47,6 +47,10 @@ def _arg_parser():
     parser.add_argument('--s3_path', type=str, default='adversarial/coinrun_vae',
         help='Path where data should be saved in the AWS S3 bucket (requires --s3)')
 
+    parser.add_argument('--notify', action='store_true', default=False,
+        help='Whether to send a Pushover notification when training ends or if it errors '
+             '(requires to have APP_TOKEN and USER_TOKEN setup in utils.py)')
+
     return parser
 
 
