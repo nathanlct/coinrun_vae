@@ -8,6 +8,4 @@ __pycache__
 *.pyc
 coinrun.egg-info
 *.moc
-.ipynb*
 vae_results
-notebooks
