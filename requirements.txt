@@ -3,6 +3,7 @@ boto3==1.16.36
 torch==1.7.0
 torchvision==0.8.1
 tensorboard==2.4.0
-pyglet==1.5.11
 tqdm==4.54.1
 termcolor==1.1.0
+stable-baselines3==0.10.0
+pyglet==1.5.11
