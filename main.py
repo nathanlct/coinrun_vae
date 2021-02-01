@@ -179,12 +179,8 @@ except Exception as e:
     print('\n\n')
     s_err = f'Training errored at epoch {epoch+1}/{args.epochs} with error: {e}'
     print(f'{TERR}{s_err}')
-    if args.notify:
-        utils.notify(message=s_err, title=args.expname)
     exit(0)
 
 print(TLINE)
 print(TINFO + c('EXPERIMENT SUCCESS', 'green', attrs=['bold']))
 print(TLINE)
-if args.notify:
-    utils.notify(message=f'Training ended succesfully after {args.epochs} epochs', title=args.expname)

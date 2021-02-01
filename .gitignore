@@ -9,3 +9,5 @@ __pycache__
 coinrun.egg-info
 *.moc
 vae_results
+*.zip
+*events*
