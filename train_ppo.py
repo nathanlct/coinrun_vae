@@ -38,7 +38,7 @@ if __name__ == '__main__':
     check_env(eval_env)
 
     # vectorize env (1 per cpu)
-    n_cpus = 3
+    n_cpus = 4
     env = SubprocVecEnv([make_env() for _ in range(n_cpus)])
     # env = Monitor(env, filename='logs.txt')
 
@@ -47,9 +47,9 @@ if __name__ == '__main__':
         policy='CnnPolicy',
         env=env,
         learning_rate=3e-4,
-        n_steps=840,  # 2048,  # true batch size is n_steps * n_cpus (n_cpus being number of envs running in parallel)
+        n_steps=2048,  # 2048,  # true train batch size is n_steps * n_cpus (n_cpus being number of envs running in parallel)
         batch_size=64,  # minibatch size
-        n_epochs=1, # 10, # number of passes to do over the whole rollout buffer (of size 2048*n_cpus) during one training iter
+        n_epochs=10, # 10, # number of passes to do over the whole rollout buffer (of size 2048*n_cpus) during one training iter
         create_eval_env=False,  # todo
         seed=None,
         verbose=2,
