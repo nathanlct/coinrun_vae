@@ -1,201 +1,266 @@
+from typing import Any, Callable, Dict, Optional, Type, Union
+
 import numpy as np
-from coinrun import setup_utils, make
-from PIL import Image
-import time
-import gym
-import random
+import torch as th
+from gym import spaces
+from torch.nn import functional as F
+
+from stable_baselines3.common import logger
+from on_policy_algorithm import OnPolicyAlgorithm
+from stable_baselines3.common.policies import ActorCriticPolicy
+from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback
+from stable_baselines3.common.utils import explained_variance, get_schedule_fn
 
 
-def show_img(np_array):
-    img = Image.fromarray(np_array, 'RGB')
-    img.show()
-
-def save_img(np_array, path):
-    img = Image.fromarray(np_array, 'RGB')
-    img.save(path)
-
-
-class CoinrunEnv(gym.Env):
-    def __init__(self, num_envs=1):
-        super(CoinrunEnv, self).__init__()
-
-        self.num_envs = 1
-        self.env_type = 'standard'  # standard, platform, maze
-
-        self._init_coinrun()
-
-    def _init_coinrun(self):
-        setup_utils.setup_and_load(use_cmd_line_args=False)
-        self.env = make(self.env_type, num_envs=self.num_envs) 
-
-        self.action_space = self.env.action_space
-        self.observation_space = self.env.observation_space
-
-    def step(self, action):
-        """
-        Input: array of actions from Discrete(7) of size (self.num_envs,)
-            Actions are:
-            0 don't move - 1 go right - 2 go left
-            3 jump straight - 4 right-jump - 5 left-jump
-            6 go down (step down from a crate)
-        Output: 
-            observations (self.num_envs, 64, 64, 3)    (or 3 -> 1 if black and white)
-            rewards (self.num_envs,)
-            dones (self.num_envs,) 
-            infos
-        """
-        obs, rwd, done, _ = self.env.step(np.array([action]))
-        return obs[0], float(rwd[0]), bool(done[0]), {}
-
-    def random_step(self):
-        actions = np.array([self.action_space.sample() for _ in range(self.num_envs)])
-        return self.step(actions)
-
-    def render(self, mode='human'):
-        self.env.render()
-
-    def reset(self):
-        obs = self.env.reset()
-        return obs[0]
-
-    def close(self):
-        self.env.close()
-
-    def __del__(self):
-        self.env.close()
-
-###
-
-from stable_baselines3 import PPO
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback, CallbackList
-
-
-# https://stable-baselines3.readthedocs.io/en/master/guide/custom_env.html
-
-
-# need callbacks
-# https://stable-baselines3.readthedocs.io/en/master/guide/callbacks.html
-
-# + make sure env is vectorized (ie parallelized) (+ is n_envs = n_cpus?)
-# & how does it work to parallelize envs if we have 20 cpus but 1 gpu?
-# and can i use coinrun which is parallelized by default? instead of stacking several hacked coinruns
-from stable_baselines3.common.vec_env import SubprocVecEnv
-
-
-class CustomCallback(BaseCallback):
+class PPO(OnPolicyAlgorithm):
     """
-    A custom callback that derives from ``BaseCallback``.
+    Proximal Policy Optimization algorithm (PPO) (clip version)
 
-    :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
+    Paper: https://arxiv.org/abs/1707.06347
+    Code: This implementation borrows code from OpenAI Spinning Up (https://github.com/openai/spinningup/)
+    https://github.com/ikostrikov/pytorch-a2c-ppo-acktr-gail and
+    and Stable Baselines (PPO2 from https://github.com/hill-a/stable-baselines)
+
+    Introduction to PPO: https://spinningup.openai.com/en/latest/algorithms/ppo.html
+
+    :param policy: The policy model to use (MlpPolicy, CnnPolicy, ...)
+    :param env: The environment to learn from (if registered in Gym, can be str)
+    :param learning_rate: The learning rate, it can be a function
+        of the current progress remaining (from 1 to 0)
+    :param n_steps: The number of steps to run for each environment per update
+        (i.e. batch size is n_steps * n_env where n_env is number of environment copies running in parallel)
+    :param batch_size: Minibatch size
+    :param n_epochs: Number of epoch when optimizing the surrogate loss
+    :param gamma: Discount factor
+    :param gae_lambda: Factor for trade-off of bias vs variance for Generalized Advantage Estimator
+    :param clip_range: Clipping parameter, it can be a function of the current progress
+        remaining (from 1 to 0).
+    :param clip_range_vf: Clipping parameter for the value function,
+        it can be a function of the current progress remaining (from 1 to 0).
+        This is a parameter specific to the OpenAI implementation. If None is passed (default),
+        no clipping will be done on the value function.
+        IMPORTANT: this clipping depends on the reward scaling.
+    :param ent_coef: Entropy coefficient for the loss calculation
+    :param vf_coef: Value function coefficient for the loss calculation
+    :param max_grad_norm: The maximum value for the gradient clipping
+    :param use_sde: Whether to use generalized State Dependent Exploration (gSDE)
+        instead of action noise exploration (default: False)
+    :param sde_sample_freq: Sample a new noise matrix every n steps when using gSDE
+        Default: -1 (only sample at the beginning of the rollout)
+    :param target_kl: Limit the KL divergence between updates,
+        because the clipping is not enough to prevent large update
+        see issue #213 (cf https://github.com/hill-a/stable-baselines/issues/213)
+        By default, there is no limit on the kl div.
+    :param tensorboard_log: the log location for tensorboard (if None, no logging)
+    :param create_eval_env: Whether to create a second environment that will be
+        used for evaluating the agent periodically. (Only available when passing string for the environment)
+    :param policy_kwargs: additional arguments to be passed to the policy on creation
+    :param verbose: the verbosity level: 0 no output, 1 info, 2 debug
+    :param seed: Seed for the pseudo random generators
+    :param device: Device (cpu, cuda, ...) on which the code should be run.
+        Setting it to auto, the code will be run on the GPU if possible.
+    :param _init_setup_model: Whether or not to build the network at the creation of the instance
     """
-    def __init__(self, verbose=0):
-        super(CustomCallback, self).__init__(verbose)
-        # Those variables will be accessible in the callback
-        # (they are defined in the base class)
-        # The RL model
-        # self.model = None  # type: BaseAlgorithm
-        # An alias for self.model.get_env(), the environment used for training
-        # self.training_env = None  # type: Union[gym.Env, VecEnv, None]
-        # Number of time the callback was called
-        # self.n_calls = 0  # type: int
-        # self.num_timesteps = 0  # type: int
-        # local and global variables
-        # self.locals = None  # type: Dict[str, Any]
-        # self.globals = None  # type: Dict[str, Any]
-        # The logger object, used to report things in the terminal
-        # self.logger = None  # stable_baselines3.common.logger
-        # # Sometimes, for event callback, it is useful
-        # # to have access to the parent object
-        # self.parent = None  # type: Optional[BaseCallback]
 
-        self.rollout_length = 0
+    def __init__(
+        self,
+        policy: Union[str, Type[ActorCriticPolicy]],
+        env: Union[GymEnv, str],
+        learning_rate: Union[float, Callable] = 3e-4,
+        n_steps: int = 2048,
+        batch_size: Optional[int] = 64,
+        n_epochs: int = 10,
+        gamma: float = 0.99,
+        gae_lambda: float = 0.95,
+        clip_range: float = 0.2,
+        clip_range_vf: Optional[float] = None,
+        ent_coef: float = 0.0,
+        vf_coef: float = 0.5,
+        max_grad_norm: float = 0.5,
+        use_sde: bool = False,
+        sde_sample_freq: int = -1,
+        target_kl: Optional[float] = None,
+        tensorboard_log: Optional[str] = None,
+        create_eval_env: bool = False,
+        policy_kwargs: Optional[Dict[str, Any]] = None,
+        verbose: int = 0,
+        seed: Optional[int] = None,
+        device: Union[th.device, str] = "auto",
+        _init_setup_model: bool = True,
+    ):
 
-    def _on_training_start(self) -> None:
+        super(PPO, self).__init__(
+            policy,
+            env,
+            learning_rate=learning_rate,
+            n_steps=n_steps,
+            gamma=gamma,
+            gae_lambda=gae_lambda,
+            ent_coef=ent_coef,
+            vf_coef=vf_coef,
+            max_grad_norm=max_grad_norm,
+            use_sde=use_sde,
+            sde_sample_freq=sde_sample_freq,
+            tensorboard_log=tensorboard_log,
+            policy_kwargs=policy_kwargs,
+            verbose=verbose,
+            device=device,
+            create_eval_env=create_eval_env,
+            seed=seed,
+            _init_setup_model=False,
+        )
+
+        self.batch_size = batch_size
+        self.n_epochs = n_epochs
+        self.clip_range = clip_range
+        self.clip_range_vf = clip_range_vf
+        self.target_kl = target_kl
+
+        if _init_setup_model:
+            self._setup_model()
+
+    def _setup_model(self) -> None:
+        super(PPO, self)._setup_model()
+
+        # Initialize schedules for policy/value clipping
+        self.clip_range = get_schedule_fn(self.clip_range)
+        if self.clip_range_vf is not None:
+            if isinstance(self.clip_range_vf, (float, int)):
+                assert self.clip_range_vf > 0, "`clip_range_vf` must be positive, " "pass `None` to deactivate vf clipping"
+
+            self.clip_range_vf = get_schedule_fn(self.clip_range_vf)
+
+    def train(self) -> None:
         """
-        This method is called before the first rollout starts.
+        Update policy using the currently gathered
+        rollout buffer.
         """
-        pass
+        # Update optimizer learning rate
+        self._update_learning_rate(self.policy.optimizer)
+        # Compute current clip range
+        clip_range = self.clip_range(self._current_progress_remaining)
+        # Optional: clip range for the value function
+        if self.clip_range_vf is not None:
+            clip_range_vf = self.clip_range_vf(self._current_progress_remaining)
 
-    def _on_rollout_start(self) -> None:
-        """
-        A rollout is the collection of environment interaction
-        using the current policy.
-        This event is triggered before collecting new samples.
-        """
-        self.rollout_length = 0
+        entropy_losses, all_kl_divs = [], []
+        pg_losses, value_losses = [], []
+        clip_fractions = []
 
-    def _on_step(self) -> bool:
-        """
-        This method will be called by the model after each call to `env.step()`.
+        # train for gradient_steps epochs
+        for epoch in range(self.n_epochs):
+            print(f'epoch {epoch}/{self.n_epochs}, batch size is {self.batch_size}')
+            approx_kl_divs = []
+            # Do a complete pass on the rollout buffer
+            for rollout_data in self.rollout_buffer.get(self.batch_size):
+                actions = rollout_data.actions
+                if isinstance(self.action_space, spaces.Discrete):
+                    # Convert discrete action from float to long
+                    actions = rollout_data.actions.long().flatten()
 
-        For child callback (of an `EventCallback`), this will be called
-        when the event is triggered.
+                # Re-sample the noise matrix because the log_std has changed
+                # TODO: investigate why there is no issue with the gradient
+                # if that line is commented (as in SAC)
+                if self.use_sde:
+                    self.policy.reset_noise(self.batch_size)
 
-        :return: (bool) If the callback returns False, training is aborted early.
-        """
-        self.rollout_length += 1
-        return True
+                values, log_prob, entropy = self.policy.evaluate_actions(rollout_data.observations, actions)
+                values = values.flatten()
+                # Normalize advantage
+                advantages = rollout_data.advantages
+                advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
-    def _on_rollout_end(self) -> None:
-        """
-        This event is triggered before updating the policy.
-        """
-        print(f'rollout ends after {self.rollout_length} steps')
+                # ratio between old and new policy, should be one at the first iteration
+                ratio = th.exp(log_prob - rollout_data.old_log_prob)
 
-    def _on_training_end(self) -> None:
-        """
-        This event is triggered before exiting the `learn()` method.
-        """
-        pass
+                # clipped surrogate loss
+                policy_loss_1 = advantages * ratio
+                policy_loss_2 = advantages * th.clamp(ratio, 1 - clip_range, 1 + clip_range)
+                policy_loss = -th.min(policy_loss_1, policy_loss_2).mean()
 
-def make_env():
-    def _init():
-        env = CoinrunEnv()
-        return env
-    return _init
+                # Logging
+                pg_losses.append(policy_loss.item())
+                clip_fraction = th.mean((th.abs(ratio - 1) > clip_range).float()).item()
+                clip_fractions.append(clip_fraction)
 
-if __name__ == '__main__':
+                if self.clip_range_vf is None:
+                    # No clipping
+                    values_pred = values
+                else:
+                    # Clip the different between old and new value
+                    # NOTE: this depends on the reward scaling
+                    values_pred = rollout_data.old_values + th.clamp(
+                        values - rollout_data.old_values, -clip_range_vf, clip_range_vf
+                    )
+                # Value loss using the TD(gae_lambda) target
+                value_loss = F.mse_loss(rollout_data.returns, values_pred)
+                value_losses.append(value_loss.item())
 
-    if True:
-        env = CoinrunEnv()
-        eval_env = CoinrunEnv()
-        check_env(env)
+                # Entropy loss favor exploration
+                if entropy is None:
+                    # Approximate entropy when no analytical form
+                    entropy_loss = -th.mean(-log_prob)
+                else:
+                    entropy_loss = -th.mean(entropy)
 
-        num_cpu = 3
+                entropy_losses.append(entropy_loss.item())
 
-        env = SubprocVecEnv([make_env() for _ in range(num_cpu)])
+                loss = policy_loss + self.ent_coef * entropy_loss + self.vf_coef * value_loss
 
-        model = PPO('CnnPolicy', env, verbose=2, tensorboard_log="./tensorboard_test/")
+                # Optimization step
+                self.policy.optimizer.zero_grad()
+                loss.backward()
+                # Clip grad norm
+                th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+                self.policy.optimizer.step()
+                approx_kl_divs.append(th.mean(rollout_data.old_log_prob - log_prob).detach().cpu().numpy())
 
-        # mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10, deterministic=True)
-        # print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
+            all_kl_divs.append(np.mean(approx_kl_divs))
 
+            if self.target_kl is not None and np.mean(approx_kl_divs) > 1.5 * self.target_kl:
+                print(f"Early stopping at step {epoch} due to reaching max kl: {np.mean(approx_kl_divs):.2f}")
+                break
 
-        # Save a checkpoint every 1000 steps
-        checkpoint_callback = CheckpointCallback(save_freq=100_000, save_path='./logs/',
-                                                name_prefix='rl_model')
-        cc = CustomCallback()
-        callbacks = CallbackList([checkpoint_callback, cc])
+        self._n_updates += self.n_epochs
+        explained_var = explained_variance(self.rollout_buffer.returns.flatten(), self.rollout_buffer.values.flatten())
 
-        model.learn(total_timesteps=1_000_000, tb_log_name="test", callback=callbacks)
+        # Logs
+        logger.record("train/entropy_loss", np.mean(entropy_losses))
+        logger.record("train/policy_gradient_loss", np.mean(pg_losses))
+        logger.record("train/value_loss", np.mean(value_losses))
+        logger.record("train/approx_kl", np.mean(approx_kl_divs))
+        logger.record("train/clip_fraction", np.mean(clip_fractions))
+        logger.record("train/loss", loss.item())
+        logger.record("train/explained_variance", explained_var)
+        if hasattr(self.policy, "log_std"):
+            logger.record("train/std", th.exp(self.policy.log_std).mean().item())
 
-        model.save("save_test")
+        logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
+        logger.record("train/clip_range", clip_range)
+        if self.clip_range_vf is not None:
+            logger.record("train/clip_range_vf", clip_range_vf)
 
-    else:
-        model = PPO.load("save_test")
-        env = CoinrunEnv()
-        obs = env.reset()
-        for i in range(10000):
-            action = random.randint(0, 6)
-            # action, _states = model.predict(obs, deterministic=True)
-            obs, reward, done, info = env.step(action)
-            env.render()
-            if reward > 0:
-                print(i, action, reward, done)
-            if done:
-                obs = env.reset()
+    def learn(
+        self,
+        total_timesteps: int,
+        callback: MaybeCallback = None,
+        log_interval: int = 1,
+        eval_env: Optional[GymEnv] = None,
+        eval_freq: int = -1,
+        n_eval_episodes: int = 5,
+        tb_log_name: str = "PPO",
+        eval_log_path: Optional[str] = None,
+        reset_num_timesteps: bool = True,
+    ) -> "PPO":
 
-        env.close()
+        return super(PPO, self).learn(
+            total_timesteps=total_timesteps,
+            callback=callback,
+            log_interval=log_interval,
+            eval_env=eval_env,
+            eval_freq=eval_freq,
+            n_eval_episodes=n_eval_episodes,
+            tb_log_name=tb_log_name,
+            eval_log_path=eval_log_path,
+            reset_num_timesteps=reset_num_timesteps,
+        )
