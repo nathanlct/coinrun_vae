@@ -12,6 +12,21 @@ from coinrun_env import CoinrunEnv
 from ppo import PPO
 
 
+"""Coinrun paper
+
+gamma 0.999
+lambda 0.95
+timesteps per rollout 256
+epochs per rollout 3
+minibatches per epoch 8
+entropy bonus (kH) 0.01
+adam learning rate 5e-4
+envs per worker 32
+workers 8
+
+"""
+
+
 class CustomCallback(BaseCallback):
     def __init__(self, verbose=0):
         super(CustomCallback, self).__init__(verbose)
@@ -46,9 +61,11 @@ if __name__ == '__main__':
     model = PPO(
         policy='CnnPolicy',
         env=env,
-        learning_rate=3e-4,
+        gamma=0.999,
+        gae_lambda=0.95,
+        learning_rate=5e-4,
         n_steps=2048,  # 2048,  # true train batch size is n_steps * n_cpus (n_cpus being number of envs running in parallel)
-        batch_size=64,  # minibatch size
+        batch_size=256,  # minibatch size
         n_epochs=10, # 10, # number of passes to do over the whole rollout buffer (of size 2048*n_cpus) during one training iter
         create_eval_env=False,  # todo
         seed=None,
@@ -60,7 +77,7 @@ if __name__ == '__main__':
     # print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
 
     # save a checkpoint every n steps
-    checkpoint_callback = CheckpointCallback(save_freq=5_000, save_path='./ppo_checkpoints/', name_prefix='debug_model')
+    checkpoint_callback = CheckpointCallback(save_freq=49_000, save_path='./ppo_checkpoints/', name_prefix='debug_model')
     callbacks = CallbackList([checkpoint_callback, CustomCallback()])
     # cf /Users/nathan/opt/anaconda3/envs/vae/lib/python3.7/site-packages/stable_baselines3/common/callbacks.py
     # to make own checkpoints to have more control
@@ -68,7 +85,7 @@ if __name__ == '__main__':
     # 3 agents will only be 3333 steps for cp callback not enough to reach 5k (save freq)
 
     # train
-    model.learn(total_timesteps=10_000, callback=callbacks)
+    model.learn(total_timesteps=10_000_000, callback=callbacks)
 
     # evaluate
     # mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10, deterministic=True)

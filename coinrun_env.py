@@ -22,15 +22,18 @@ class CoinrunEnv(gym.Env):
     def step(self, action):
         """
         Input: array of actions from Discrete(7) of size (self.num_envs,)
-            Actions are:
-            0 don't move - 1 go right - 2 go left
-            3 jump straight - 4 right-jump - 5 left-jump
-            6 go down (step down from a crate)
         Output: 
             observations (self.num_envs, 64, 64, 3)    (or 3 -> 1 if black and white)
             rewards (self.num_envs,)
             dones (self.num_envs,) 
             infos
+
+        Actions are:
+            0 don't move - 1 go right - 2 go left
+            3 jump straight - 4 right-jump - 5 left-jump
+            6 go down (step down from a crate)
+        Reward is 10 if agent wins (eg collects the coin) otherwise 0 (to verify)
+        Done is true if agent wins, dies or after 1000 steps (to verify)
         """
         obs, rwd, done, _ = self.env.step(np.array([action]))
         return obs[0], float(rwd[0]), bool(done[0]), {}
